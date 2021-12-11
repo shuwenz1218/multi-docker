@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t travis/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true travis/react-test npm test
+
+language: generic
+
+after_success:
+  - docker build -t travis/client-prod ./client
+  - docker build -t travis/nginx-prod ./nginx
+  - docker build -t travis/server-prod ./server
+  - docker build -t travis/worker-prod ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push travis/client-prod
+  - docker push travis/nginx-prod
+  - docker push travis/server-prod
+  - docker push travis/worker-prod
